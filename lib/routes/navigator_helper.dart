@@ -17,4 +17,8 @@ class NavigatorHelper {
   static toHome() {
     return Get.offNamed(Routes.home);
   }
+
+  static toOnBoard() {
+    return Get.offNamed(Routes.onboard);
+  }
 }

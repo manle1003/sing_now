@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_getx_boilerplate/routes/navigator_helper.dart';
-import 'package:flutter_getx_boilerplate/shared/services/services.dart';
 import 'package:flutter_getx_boilerplate/shared/shared.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 
@@ -26,18 +25,8 @@ class _SplashScreenState extends State<SplashScreen> {
     if (Platform.isIOS) {
       FlutterNativeSplash.remove();
     }
-    final firstInstall = StorageService.firstInstall;
     await Future.delayed(const Duration(milliseconds: 300));
-    if (firstInstall) {
-      NavigatorHelper.toOnBoardScreen();
-    }
-
-    final accessToken = StorageService.token;
-    if (accessToken != null) {
-      NavigatorHelper.toHome();
-    } else {
-      NavigatorHelper.toAuth();
-    }
+    NavigatorHelper.toHome();
   }
 
   @override

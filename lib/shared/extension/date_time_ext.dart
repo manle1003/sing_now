@@ -12,6 +12,17 @@ class PatternConstants {
 }
 
 extension DateTimeExt on DateTime {
+  String formatDuration(double seconds) {
+    int minutes = (seconds ~/ 60);
+    int secs = (seconds % 60).toInt();
+    return '${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+  }
+
+  String formatDurationToNow() {
+    Duration diff = DateTime.now().difference(this);
+    return formatDuration(diff.inSeconds.toDouble());
+  }
+
   bool isBefore(String utc) {
     final now = DateTime.now();
     final date = DateTime.parse(utc);

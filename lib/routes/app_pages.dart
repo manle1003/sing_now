@@ -1,11 +1,13 @@
-import 'package:flutter_getx_boilerplate/modules/home/home.dart';
 import 'package:flutter_getx_boilerplate/modules/modules.dart';
 import 'package:get/get.dart';
+
+import '../modules/home/home_binding.dart';
+import '../modules/home/home_screen.dart';
 
 part 'app_routes.dart';
 
 class AppPages {
-  static const initial = Routes.splash;
+  static const initial = Routes.home;
 
   static final routes = [
     GetPage(
@@ -18,11 +20,7 @@ class AppPages {
         ),
       ],
     ),
-    GetPage(
-      name: Routes.auth,
-      page: () => const AuthScreen(),
-      binding: AuthBinding(),
-    ),
+   
     GetPage(
       name: Routes.home,
       page: () => const HomeScreen(),
