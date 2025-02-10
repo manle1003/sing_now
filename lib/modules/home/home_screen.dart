@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_getx_boilerplate/modules/home/home.dart';
 import 'package:flutter_getx_boilerplate/shared/extension/context_ext.dart';
 import 'package:get/get.dart';
+import 'package:lottie/lottie.dart';
 
 import '../../shared/constants/image_constants.dart';
 import '../../shared/widgets/image/image_widget.dart';
@@ -33,55 +34,85 @@ class HomeScreen extends GetView<HomeController> {
         );
       }
 
-      return _buildReaderBackground();
+      return _buildReader();
     });
+  }
+
+  _buildIntroPage() {
+    return GestureDetector(
+      onHorizontalDragEnd: (details) {
+        controller.pageController.animateToPage(
+          1,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+        );
+      },
+      child: Center(
+        child: LottieBuilder.asset(
+          ImageConstants.ltBackground,
+          fit: BoxFit.cover,
+          width: 200,
+          height: 200,
+        ),
+      ),
+    );
   }
 
   _buildPlayControl(BuildContext context) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        Obx(
-          () => Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: ReaderBackgroud(
-              lyricModel: controller.lyricModel.value,
-              playProgress: controller.playProgress.value,
-              lyricUi: controller.lyricUI,
-              playing: controller.playing.value,
-              onPlay: controller.onPlay,
-            ),
-          ),
-        ),
-        const SizedBox(height: 20),
         _sliderProgress(context),
+        _buidPlayMusic(),
       ],
     );
   }
 
-  _buildReaderBackground() {
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          Positioned.fill(
-            child: ImageWidget(
-              ImageConstants.imageBackgroudMusic,
-              fit: BoxFit.cover,
-              height: Get.height,
-              width: Get.width,
-            ),
-          ),
-          Positioned.fill(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-              child: Container(
-                color: Colors.black.withOpacity(0.3),
+  _buildReader() {
+    return Stack(
+      children: [
+        ..._buildBackGround(),
+        Positioned.fill(
+          child: PageView(
+            controller: controller.pageController,
+            children: [
+              _buildIntroPage(),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Obx(() => ReaderBackgroud(
+                      lyricModel: controller.lyricModel.value,
+                      playProgress: controller.playProgress.value,
+                      lyricUi: controller.lyricUI,
+                      playing: controller.playing.value,
+                      onPlay: controller.onReader,
+                    )),
               ),
-            ),
-          )
-        ],
-      ),
+            ],
+          ),
+        ),
+      ],
     );
+  }
+
+  _buildBackGround() {
+    return [
+      Positioned(
+        child: ImageWidget(
+          ImageConstants.imageBackgroudMusic,
+          fit: BoxFit.fill,
+          height: Get.height,
+          width: Get.width,
+        ),
+      ),
+      Positioned(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            color: Colors.black.withOpacity(0.3),
+          ),
+        ),
+      ),
+    ];
   }
 
   _sliderProgress(BuildContext context) {
@@ -123,6 +154,22 @@ class HomeScreen extends GetView<HomeController> {
       return const SizedBox.shrink();
     });
   }
+
+  _buidPlayMusic() {
+    return Obx(() => InkWell(
+          onTap: () => _onplayMusic(),
+          child: ImageWidget(
+            controller.playing.value
+                ? ImageConstants.iconPause
+                : ImageConstants.iconPlay,
+            height: 40,
+            fit: BoxFit.scaleDown,
+          ),
+        ));
+  }
+
+  _onplayMusic() =>
+      controller.playing.value ? controller.onPause() : controller.onPlay();
 
   _formatDuration(double seconds) {
     int minutes = (seconds ~/ 60);

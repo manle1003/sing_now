@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_getx_boilerplate/base/base_controller.dart';
 import 'package:flutter_getx_boilerplate/repositories/auth_repository.dart';
 import 'package:audioplayers/audioplayers.dart';
@@ -18,21 +19,22 @@ class HomeController extends BaseController<AuthRepository> {
   final timeStart = 0.0.obs;
   final timeEnd = 0.0.obs;
 
-  final lyricUI = UINetease(
-    lyricAlign: LyricAlign.LEFT,
-  );
+  final lyricUI = UINetease();
 
   final lyricModel = LyricsReaderModel().obs;
 
   final isLyricLoaded = false.obs;
   final isTap = false.obs;
   final playing = false.obs;
+  final isPause = false.obs;
 
   AudioPlayer? audioPlayer;
+  final PageController pageController = PageController();
 
   @override
   void onInit() {
     _initData();
+    _initAudioPlayer();
     super.onInit();
   }
 
@@ -41,17 +43,11 @@ class HomeController extends BaseController<AuthRepository> {
         .bindLyricToMain(CommonConstants.normalLyric)
         .getModel();
     isLyricLoaded.value = true;
-    _initPlay();
   }
 
-  _initPlay() {
-    if (audioPlayer != null) {
-      audioPlayer!.resume();
-      return;
-    }
-
-    audioPlayer ??= AudioPlayer()
-      ..play(AssetSource(ImageConstants.beatAudio))
+  _initAudioPlayer() async {
+    audioPlayer = AudioPlayer()
+      ..setSourceAsset(ImageConstants.beatAudio)
       ..onDurationChanged.listen((event) {
         maxValue.value = event.inMilliseconds.toDouble();
         timeEnd.value = event.inSeconds.toDouble();
@@ -63,11 +59,25 @@ class HomeController extends BaseController<AuthRepository> {
           timeStart.value = event.inSeconds.toDouble();
         }
       })
-      ..onPlayerStateChanged
-          .listen((state) => playing.value = state == PlayerState.playing);
+      ..onPlayerStateChanged.listen((state) {
+        playing.value = state == PlayerState.playing;
+      });
+  
 
+    audioPlayer?.setReleaseMode(ReleaseMode.stop);
+  }
+
+  onPlay() {
+    if (playing.value) {
+      audioPlayer?.pause();
+      return;
+    }
+
+    audioPlayer?.play(AssetSource(ImageConstants.beatAudio));
     playing.value = true;
   }
+
+  onPause() => audioPlayer?.pause();
 
   onChangSlide(double value) => sliderProgress.value = value;
 
@@ -79,5 +89,12 @@ class HomeController extends BaseController<AuthRepository> {
     audioPlayer?.seek(Duration(milliseconds: value.toInt()));
   }
 
-  onPlay(progress) => audioPlayer?.seek(Duration(milliseconds: progress));
+  onReader(progress) => audioPlayer?.seek(Duration(milliseconds: progress));
+
+  @override
+  void onClose() {
+    audioPlayer?.dispose();
+    audioPlayer?.stop();
+    super.onClose();
+  }
 }

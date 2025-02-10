@@ -28,7 +28,7 @@ class ReaderBackgroud extends StatelessWidget {
       position: playProgress,
       lyricUi: lyricUi,
       playing: playing,
-      size: Size(double.infinity, MediaQuery.of(context).size.height / 6),
+      size: Size(double.infinity, MediaQuery.of(context).size.height / 1.4),
       emptyBuilder: () => Center(
         child: Text(
           "No lyrics",
