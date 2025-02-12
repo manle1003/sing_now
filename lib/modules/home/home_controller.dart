@@ -6,8 +6,8 @@ import 'package:flutter_getx_boilerplate/shared/constants/image_constants.dart';
 import 'package:flutter_lyric/lyrics_reader.dart';
 import 'package:flutter_lyric/lyrics_reader_model.dart';
 import 'package:get/get.dart';
-
-import '../../shared/constants/common.dart';
+import 'package:xml/xml.dart';
+import 'package:flutter/services.dart' show rootBundle;
 
 class HomeController extends BaseController<AuthRepository> {
   HomeController(super.repository);
@@ -33,16 +33,28 @@ class HomeController extends BaseController<AuthRepository> {
 
   @override
   void onInit() {
-    _initData();
+    _initLyrics();
+
     _initAudioPlayer();
     super.onInit();
   }
 
-  _initData() async {
-    lyricModel.value = LyricsModelBuilder.create()
-        .bindLyricToMain(CommonConstants.normalLyric)
-        .getModel();
+  _initLyrics() async {
+    String xmlString = await loadXmlFromAssets("assets/audios/lyrics.xml");
+    print("DEBUG: XML Content => \n$xmlString");
+
+    String lrcLyrics =
+        convertXmlToLrc(xmlString, "Về Đâu Mái Tóc Người Thương", "Quang Lê");
+
+    print("Lrc Lyrics: $lrcLyrics");
+
+    lyricModel.value =
+        LyricsModelBuilder.create().bindLyricToMain(lrcLyrics).getModel();
     isLyricLoaded.value = true;
+  }
+
+  loadXmlFromAssets(String path) async {
+    return await rootBundle.loadString(path);
   }
 
   _initAudioPlayer() async {
@@ -62,7 +74,6 @@ class HomeController extends BaseController<AuthRepository> {
       ..onPlayerStateChanged.listen((state) {
         playing.value = state == PlayerState.playing;
       });
-  
 
     audioPlayer?.setReleaseMode(ReleaseMode.stop);
   }
@@ -90,6 +101,44 @@ class HomeController extends BaseController<AuthRepository> {
   }
 
   onReader(progress) => audioPlayer?.seek(Duration(milliseconds: progress));
+
+  String convertXmlToLrc(String xmlString, String title, String artist) {
+    final document = XmlDocument.parse(xmlString);
+    final params = document.findAllElements('param');
+
+    print("DEBUG: Found ${params.length} params in XML");
+
+    final lrcBuffer = StringBuffer()
+      ..writeln("[ti:$title]")
+      ..writeln("[ar:$artist]")
+      ..writeln("[by:]")
+      ..writeln("[offset:0]");
+
+    for (var param in params) {
+      final words = param.findAllElements('i');
+      if (words.isEmpty) continue;
+
+      final startTime = words.first.getAttribute('va');
+      if (startTime == null) continue;
+
+      final formattedTime = formatTime(startTime);
+      final lyricLine = words.map((e) => e.innerText.trim()).join(" ");
+
+      lrcBuffer.writeln("[$formattedTime]$lyricLine");
+      print("DEBUG: [$formattedTime] $lyricLine");
+    }
+
+    return lrcBuffer.toString();
+  }
+
+  String formatTime(String time) {
+    final seconds = double.tryParse(time) ?? 0.0;
+    final minutes = seconds ~/ 60;
+    final remainingSeconds = seconds % 60;
+
+    return '${minutes.toString().padLeft(2, '0')}:'
+        '${remainingSeconds.toStringAsFixed(2).padLeft(5, '0')}';
+  }
 
   @override
   void onClose() {
