@@ -48,6 +48,8 @@ flutter:
     - assets/svgs/
     - assets/audios/
     - assets/lotties/
+    - assets/audios/lyrics.xml
+
 
   # see https://flutter.dev/to/font-from-package
   fonts:
